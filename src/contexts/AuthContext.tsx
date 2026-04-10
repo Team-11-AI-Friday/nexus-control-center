@@ -1,60 +1,65 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import React, { createContext, useContext, useState, useCallback } from "react";
+import type { AppUser } from "@/data/users";
+import { authenticateUser, getRoleDashboardPath } from "@/data/users";
 import type { UserRole } from "@/types/deviation";
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  currentUser: AppUser | null;
   role: UserRole | null;
-  setRole: (role: UserRole) => void;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => { success: boolean; error?: string; redirectPath?: string };
+  signOut: () => void;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(() => {
+    // Restore session from localStorage
+    const stored = localStorage.getItem("deviq_user");
+    return stored ? JSON.parse(stored) : null;
+  });
+  const [loading] = useState(false);
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+  const role = currentUser?.role ?? null;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+  const signIn = useCallback((email: string, password: string): { success: boolean; error?: string; redirectPath?: string } => {
+    const user = authenticateUser(email, password);
+    if (!user) {
+      return { success: false, error: "Invalid email or password. Please try again." };
+    }
+    setCurrentUser(user);
+    localStorage.setItem("deviq_user", JSON.stringify(user));
+    const redirectPath = getRoleDashboardPath(user.role);
+    return { success: true, redirectPath };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  };
+  const signOut = useCallback(() => {
+    setCurrentUser(null);
+    localStorage.removeItem("deviq_user");
+  }, []);
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
-  };
-
-  const signOut = async () => {
-    setRole(null);
-    await supabase.auth.signOut();
-  };
+  const hasPermission = useCallback(
+    (permission: string): boolean => {
+      if (!currentUser) return false;
+      if (currentUser.permissions.includes("*")) return true;
+      return currentUser.permissions.includes(permission);
+    },
+    [currentUser]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, session, role, setRole, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        role,
+        loading,
+        signIn,
+        signOut,
+        hasPermission,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

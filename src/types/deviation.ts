@@ -38,6 +38,7 @@ export type WorkflowStage =
   | "l1_approval"
   | "l2_approval"
   | "compliance"
+  | "final_approval"
   | "executed"
   | "closed";
 
@@ -47,6 +48,7 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
   "l1_approval",
   "l2_approval",
   "compliance",
+  "final_approval",
   "executed",
   "closed",
 ];
@@ -56,16 +58,39 @@ export const STAGE_LABELS: Record<WorkflowStage, string> = {
   ai_review: "AI Review",
   l1_approval: "L1 Approval",
   l2_approval: "L2 Approval",
-  compliance: "Compliance",
-  executed: "Executed",
-  closed: "Closed",
+  compliance: "Compliance Review",
+  final_approval: "Final Approval",
+  executed: "Execution",
+  closed: "Closed / Archived",
 };
 
-export type RequestStatus = "pending" | "approved" | "rejected" | "in_review" | "escalated";
+export type RequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "in_review"
+  | "escalated";
+
+export interface RiskAssessment {
+  score: number;
+  level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  factors: { factor: string; impact: "LOW" | "MEDIUM" | "HIGH" }[];
+  recommendation: string;
+  model?: string;
+  fallback?: boolean;
+}
+
+export interface LLMResponse<T = string> {
+  result: T;
+  model: string;
+  fallback: boolean;
+  error?: string;
+}
 
 export interface DeviationRequest {
   id: string;
   customerAccountId: string;
+  customerName: string;
   deviationType: DeviationType;
   contractReference: string;
   requestedValue: string;
@@ -75,6 +100,7 @@ export interface DeviationRequest {
   justification: string;
   aiJustification: string;
   aiRiskScore: number;
+  riskAssessment?: RiskAssessment;
   currentStage: WorkflowStage;
   status: RequestStatus;
   requestorId: string;
@@ -85,6 +111,8 @@ export interface DeviationRequest {
   slaDeadline: string;
   approvalChain: ApprovalStep[];
   policyReferences: PolicyReference[];
+  llmModel?: string;
+  humanOverride?: boolean;
 }
 
 export interface ApprovalStep {
@@ -95,6 +123,7 @@ export interface ApprovalStep {
   timestamp?: string;
   comment?: string;
   aiRecommendation?: string;
+  isOverride?: boolean;
 }
 
 export interface PolicyReference {
@@ -114,6 +143,19 @@ export interface ActivityLogEntry {
   actorRole: UserRole;
   timestamp: string;
   details: string;
+  immutable: true;
+}
+
+export interface Notification {
+  id: string;
+  type: "state_change" | "sla_breach" | "approval_needed" | "info";
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  requestId?: string;
+  targetRole?: UserRole;
+  targetUserId?: string;
 }
 
 export interface KPIData {
@@ -124,7 +166,14 @@ export interface KPIData {
 }
 
 export interface AnalyticsData {
-  requestsByType: { month: string; billing_credit: number; bandwidth_boost: number; sla_waiver: number; content_access: number; kyc_deferral: number }[];
+  requestsByType: {
+    month: string;
+    billing_credit: number;
+    bandwidth_boost: number;
+    sla_waiver: number;
+    content_access: number;
+    kyc_deferral: number;
+  }[];
   slaBreachTrend: { month: string; breaches: number; total: number }[];
   approvalRate: { name: string; value: number }[];
   riskDistribution: { score: string; count: number }[];

@@ -1,159 +1,157 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { UrgencyBadge } from "@/components/ui/UrgencyBadge";
-import { mockDeviations } from "@/data/mockData";
-import { DEVIATION_TYPE_LABELS, STAGE_LABELS, ROLE_LABELS } from "@/types/deviation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronDown, ChevronUp, Download, Search } from "lucide-react";
-import { toast } from "sonner";
+import { useDeviations } from "@/contexts/DeviationContext";
+import { ROLE_LABELS } from "@/types/deviation";
+import { Search, Download, ChevronDown, ChevronUp, Shield } from "lucide-react";
 
 export default function AuditLogPage() {
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const { activityLog, getDeviationById } = useDeviations();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const filtered = mockDeviations.filter(d => {
-    if (search && !d.id.toLowerCase().includes(search.toLowerCase()) && !d.requestorName.toLowerCase().includes(search.toLowerCase())) return false;
-    if (statusFilter !== "all" && d.status !== statusFilter) return false;
-    if (typeFilter !== "all" && d.deviationType !== typeFilter) return false;
-    return true;
-  });
+  const filteredLogs = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return activityLog.filter(
+      (l) =>
+        l.requestId.toLowerCase().includes(term) ||
+        l.action.toLowerCase().includes(term) ||
+        l.actorName.toLowerCase().includes(term) ||
+        l.details.toLowerCase().includes(term)
+    );
+  }, [activityLog, searchTerm]);
 
   const exportCSV = () => {
-    const headers = "Request ID,Type,Requestor,Stage,Status,Risk Score,Created\n";
-    const rows = filtered.map(d =>
-      `${d.id},${DEVIATION_TYPE_LABELS[d.deviationType]},${d.requestorName},${STAGE_LABELS[d.currentStage]},${d.status},${d.aiRiskScore},${d.createdAt}`
-    ).join("\n");
-    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const headers = ["Log ID", "Request ID", "Action", "Actor", "Role", "Timestamp", "Details"];
+    const rows = filteredLogs.map((l) => [
+      l.id,
+      l.requestId,
+      l.action,
+      l.actorName,
+      ROLE_LABELS[l.actorRole],
+      new Date(l.timestamp).toISOString(),
+      `"${l.details.replace(/"/g, '""')}"`,
+    ]);
+
+    // Include approval thread data for each unique request
+    const uniqueRequests = [...new Set(filteredLogs.map((l) => l.requestId))];
+    uniqueRequests.forEach((reqId) => {
+      const dev = getDeviationById(reqId);
+      if (dev) {
+        dev.approvalChain
+          .filter((s) => s.status !== "pending")
+          .forEach((step) => {
+            rows.push([
+              `CHAIN-${reqId}-${step.stage}`,
+              reqId,
+              `Approval Chain: ${step.status}`,
+              step.approverName,
+              ROLE_LABELS[step.approverRole],
+              step.timestamp || "",
+              `"${step.comment || step.aiRecommendation || "No comment"}"`,
+            ]);
+          });
+      }
+    });
+
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "audit_log.csv";
+    a.download = `deviq_audit_log_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
-    toast.success("Audit log exported");
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <GlassCard className="p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by ID or requestor..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-9 bg-muted/30 border-border/30"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px] bg-muted/30 border-border/30">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-              <SelectItem value="in_review">In Review</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px] bg-muted/30 border-border/30">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="billing_credit">Billing Credit</SelectItem>
-              <SelectItem value="bandwidth_boost">Bandwidth Boost</SelectItem>
-              <SelectItem value="sla_waiver">SLA Waiver</SelectItem>
-              <SelectItem value="content_access">Content Access</SelectItem>
-              <SelectItem value="kyc_deferral">KYC Deferral</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={exportCSV} className="border-primary/30 text-primary hover:bg-primary/10">
-            <Download className="w-4 h-4 mr-2" /> Export CSV
-          </Button>
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by Request ID, action, or actor..."
+            className="pl-10 bg-muted/30 border-border/30"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-      </GlassCard>
+        <Button onClick={exportCSV} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
+          <Download className="w-4 h-4 mr-2" /> Export CSV
+        </Button>
+      </div>
 
-      {/* Table */}
-      <GlassCard className="p-0 overflow-hidden">
-        <div className="overflow-x-auto">
+      <GlassCard>
+        <div className="flex items-center gap-2 mb-4">
+          <Shield className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Immutable Audit Log</h3>
+          <span className="text-[10px] text-muted-foreground ml-auto">{filteredLogs.length} entries</span>
+        </div>
+        <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/30">
-                <th className="text-left p-4 text-xs text-muted-foreground font-medium">Request ID</th>
-                <th className="text-left p-4 text-xs text-muted-foreground font-medium">Type</th>
-                <th className="text-left p-4 text-xs text-muted-foreground font-medium">Requestor</th>
-                <th className="text-left p-4 text-xs text-muted-foreground font-medium">Stage</th>
-                <th className="text-left p-4 text-xs text-muted-foreground font-medium">Risk</th>
-                <th className="text-left p-4 text-xs text-muted-foreground font-medium">Status</th>
-                <th className="text-left p-4 text-xs text-muted-foreground font-medium">Date</th>
-                <th className="p-4"></th>
+                <th className="text-left text-xs text-muted-foreground font-medium py-2 px-3">ID</th>
+                <th className="text-left text-xs text-muted-foreground font-medium py-2 px-3">Request</th>
+                <th className="text-left text-xs text-muted-foreground font-medium py-2 px-3">Action</th>
+                <th className="text-left text-xs text-muted-foreground font-medium py-2 px-3">Actor</th>
+                <th className="text-left text-xs text-muted-foreground font-medium py-2 px-3">Role</th>
+                <th className="text-left text-xs text-muted-foreground font-medium py-2 px-3">Time</th>
+                <th className="text-left text-xs text-muted-foreground font-medium py-2 px-3 w-8" />
               </tr>
             </thead>
             <tbody>
-              {filtered.map((d, i) => (
-                <>
+              {filteredLogs.map((log, i) => {
+                const dev = getDeviationById(log.requestId);
+                const isExpanded = expandedId === log.id;
+                return (
                   <motion.tr
-                    key={d.id}
+                    key={log.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => setExpandedRow(expandedRow === d.id ? null : d.id)}
-                    className={`border-b border-border/20 cursor-pointer transition-colors ${
-                      i % 2 === 0 ? "bg-transparent" : "bg-muted/10"
-                    } hover:bg-primary/5`}
+                    transition={{ delay: i * 0.02 }}
+                    className="border-b border-border/10 hover:bg-muted/20 transition-colors"
                   >
-                    <td className="p-4 font-mono text-primary text-xs">{d.id}</td>
-                    <td className="p-4 text-foreground">{DEVIATION_TYPE_LABELS[d.deviationType]}</td>
-                    <td className="p-4 text-foreground">{d.requestorName}</td>
-                    <td className="p-4 text-foreground text-xs">{STAGE_LABELS[d.currentStage]}</td>
-                    <td className="p-4">
-                      <span className={`font-mono text-xs font-bold ${
-                        d.aiRiskScore <= 30 ? "text-success" : d.aiRiskScore <= 60 ? "text-warning" : "text-destructive"
-                      }`}>
-                        {d.aiRiskScore}
-                      </span>
+                    <td className="py-3 px-3 font-mono text-xs text-muted-foreground">{log.id}</td>
+                    <td className="py-3 px-3 font-mono text-xs text-primary">{log.requestId}</td>
+                    <td className="py-3 px-3 text-xs text-foreground font-medium">{log.action}</td>
+                    <td className="py-3 px-3 text-xs text-foreground">{log.actorName}</td>
+                    <td className="py-3 px-3 text-xs text-muted-foreground">{ROLE_LABELS[log.actorRole]}</td>
+                    <td className="py-3 px-3 text-xs text-muted-foreground font-mono">{new Date(log.timestamp).toLocaleString()}</td>
+                    <td className="py-3 px-3">
+                      <button onClick={() => setExpandedId(isExpanded ? null : log.id)}>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                      </button>
                     </td>
-                    <td className="p-4"><StatusBadge status={d.status} /></td>
-                    <td className="p-4 font-mono text-xs text-muted-foreground">{new Date(d.createdAt).toLocaleDateString()}</td>
-                    <td className="p-4">
-                      {expandedRow === d.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                    </td>
-                  </motion.tr>
-                  {expandedRow === d.id && (
-                    <tr key={`${d.id}-detail`}>
-                      <td colSpan={8} className="p-4 bg-muted/10">
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-4 text-xs">
-                            <div><span className="text-muted-foreground">Customer:</span> <span className="text-foreground font-mono">{d.customerAccountId}</span></div>
-                            <div><span className="text-muted-foreground">Value:</span> <span className="text-foreground">{d.requestedValue}</span></div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">Decision Thread:</div>
-                            {d.approvalChain.filter(s => s.status !== "pending").map((step, j) => (
-                              <div key={j} className="flex items-center gap-2 text-xs py-1">
-                                <span className={`w-2 h-2 rounded-full ${step.status === "approved" ? "bg-success" : "bg-destructive"}`} />
-                                <span className="text-foreground">{step.approverName}</span>
-                                <span className="text-muted-foreground">{STAGE_LABELS[step.stage]}</span>
-                                {step.comment && <span className="text-muted-foreground italic">— "{step.comment}"</span>}
-                              </div>
-                            ))}
-                          </div>
+                    {isExpanded && (
+                      <td colSpan={7} className="border-b border-border/20">
+                        <div className="px-6 py-3 bg-muted/10 space-y-2">
+                          <div className="text-xs text-foreground">{log.details}</div>
+                          {dev && (
+                            <div className="space-y-1 mt-2">
+                              <div className="text-xs text-muted-foreground font-semibold">Decision Thread:</div>
+                              {dev.approvalChain
+                                .filter((s) => s.status !== "pending")
+                                .map((step, si) => (
+                                  <div key={si} className="text-[11px] text-muted-foreground">
+                                    <span className={step.status === "approved" ? "text-success" : step.status === "rejected" ? "text-destructive" : "text-muted-foreground"}>
+                                      [{step.status.toUpperCase()}]
+                                    </span>{" "}
+                                    {step.approverName} ({ROLE_LABELS[step.approverRole]}) — {step.timestamp ? new Date(step.timestamp).toLocaleString() : ""}
+                                    {step.comment && <span className="italic ml-2">"{step.comment}"</span>}
+                                    {step.isOverride && <span className="text-warning ml-2">[OVERRIDE]</span>}
+                                  </div>
+                                ))}
+                            </div>
+                          )}
                         </div>
                       </td>
-                    </tr>
-                  )}
-                </>
-              ))}
+                    )}
+                  </motion.tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

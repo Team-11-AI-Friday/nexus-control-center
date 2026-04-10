@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { GlobeScene } from "@/components/3d/GlobeScene";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import type { UserRole } from "@/types/deviation";
+import { USERS } from "@/data/users";
 import { ROLE_LABELS } from "@/types/deviation";
 import {
-  Briefcase, Wifi, UserCheck, DollarSign, Shield, Settings,
+  Briefcase, Wifi, UserCheck, DollarSign, Shield, Settings, LogIn, Sun, Moon,
 } from "lucide-react";
+import type { UserRole } from "@/types/deviation";
 
 const roleIcons: Record<UserRole, React.ElementType> = {
   operations_manager: Briefcase,
@@ -31,175 +33,173 @@ const roleColors: Record<UserRole, string> = {
   system_admin: "#6366f1",
 };
 
-type Step = "auth" | "role";
-
 export default function LoginPage() {
-  const { user, signIn, signUp, setRole } = useAuth();
+  const { currentUser, signIn } = useAuth();
+  const { toggleTheme, isDark } = useTheme();
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>(user ? "role" : "auth");
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect
+  if (currentUser) {
+    navigate("/dashboard", { replace: true });
+    return null;
+  }
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isLogin) {
-        await signIn(email, password);
+      const result = signIn(email, password);
+      if (result.success) {
+        toast.success("Welcome to DeviQ!", {
+          description: `Signed in successfully.`,
+        });
+        navigate(result.redirectPath || "/dashboard");
       } else {
-        await signUp(email, password);
-        toast.success("Account created! Check your email to verify.");
+        toast.error(result.error || "Authentication failed");
       }
-      setStep("role");
-    } catch (err: any) {
-      toast.error(err.message || "Authentication failed");
+    } catch {
+      toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRoleSelect = (role: UserRole) => {
-    setRole(role);
-    navigate("/dashboard");
-  };
-
-  // Allow demo mode - skip to role selection
-  const handleDemoMode = () => {
-    setStep("role");
+  const handleQuickLogin = (userEmail: string) => {
+    setEmail(userEmail);
+    setPassword("DevIQ@2025");
+    // Auto-submit
+    const result = signIn(userEmail, "DevIQ@2025");
+    if (result.success) {
+      toast.success("Welcome to DeviQ!", {
+        description: `Quick login successful.`,
+      });
+      navigate(result.redirectPath || "/dashboard");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: "#0a0a0f" }}>
-      <GlobeScene />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: "var(--login-bg)" }}>
+      {isDark && <GlobeScene />}
 
-      <div className="relative z-10 w-full max-w-4xl px-4">
-        <AnimatePresence mode="wait">
-          {step === "auth" ? (
-            <motion.div
-              key="auth"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4 }}
-              className="flex flex-col items-center"
-            >
-              <motion.h1
-                className="text-4xl font-bold text-foreground mb-2 glow-text"
-                initial={{ y: -20 }}
-                animate={{ y: 0 }}
+      {/* Theme Toggle */}
+      <div className="absolute top-4 right-4 z-20">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="text-muted-foreground hover:text-foreground backdrop-blur-md bg-muted/20 border border-border/30"
+          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          <motion.div
+            key={isDark ? "moon" : "sun"}
+            initial={{ rotate: -90, opacity: 0 }}
+            animate={{ rotate: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </motion.div>
+        </Button>
+      </div>
+
+      <div className="relative z-10 w-full max-w-5xl px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col items-center"
+        >
+          <motion.h1
+            className="text-4xl font-bold text-foreground mb-2 glow-text"
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
+          >
+            DeviQ
+          </motion.h1>
+          <p className="text-muted-foreground mb-8 text-sm">
+            AI-Assisted Service Deviation & Approval Workflow
+          </p>
+
+          {/* Login Form */}
+          <GlassCard className="w-full max-w-md mb-8">
+            <form onSubmit={handleAuth} className="space-y-4">
+              <h2 className="text-lg font-semibold text-foreground text-center">
+                Sign In
+              </h2>
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-muted/50 border-border/50"
+                required
+              />
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-muted/50 border-border/50"
+                required
+              />
+              <Button
+                type="submit"
+                className="w-full gradient-primary text-primary-foreground font-semibold"
+                disabled={loading}
               >
-                ServiceDev
-              </motion.h1>
-              <p className="text-muted-foreground mb-8 text-sm">AI-Assisted Service Deviation & Approval Workflow</p>
+                <LogIn className="w-4 h-4 mr-2" />
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+          </GlassCard>
 
-              <GlassCard className="w-full max-w-md">
-                <form onSubmit={handleAuth} className="space-y-4">
-                  <h2 className="text-lg font-semibold text-foreground text-center">
-                    {isLogin ? "Sign In" : "Create Account"}
-                  </h2>
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="bg-muted/50 border-border/50"
-                    required
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="bg-muted/50 border-border/50"
-                    required
-                  />
-                  <Button type="submit" className="w-full gradient-primary text-primary-foreground font-semibold" disabled={loading}>
-                    {loading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"}
-                  </Button>
-                  <div className="flex items-center justify-between text-sm">
-                    <button
-                      type="button"
-                      onClick={() => setIsLogin(!isLogin)}
-                      className="text-primary hover:underline"
+          {/* Quick Login Cards */}
+          <div className="w-full">
+            <p className="text-xs text-muted-foreground text-center mb-4">
+              Quick Login — Click any role to sign in instantly
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {USERS.map((user, i) => {
+                const Icon = roleIcons[user.role];
+                const color = roleColors[user.role];
+                return (
+                  <motion.div
+                    key={user.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + i * 0.08 }}
+                  >
+                    <GlassCard
+                      hover
+                      onClick={() => handleQuickLogin(user.email)}
+                      className="flex flex-col items-center gap-2 py-5 text-center"
                     >
-                      {isLogin ? "Need an account?" : "Already have an account?"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDemoMode}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      Demo Mode →
-                    </button>
-                  </div>
-                </form>
-              </GlassCard>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="role"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4 }}
-              className="flex flex-col items-center"
-            >
-              <motion.h1
-                className="text-3xl font-bold text-foreground mb-2 glow-text"
-                initial={{ y: -20 }}
-                animate={{ y: 0 }}
-              >
-                Select Your Role
-              </motion.h1>
-              <p className="text-muted-foreground mb-8 text-sm">Choose your operational role to continue</p>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
-                {(Object.keys(ROLE_LABELS) as UserRole[]).map((role, i) => {
-                  const Icon = roleIcons[role];
-                  const color = roleColors[role];
-                  return (
-                    <motion.div
-                      key={role}
-                      initial={{ opacity: 0, y: 30 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.08 }}
-                    >
-                      <GlassCard
-                        hover
-                        onClick={() => handleRoleSelect(role)}
-                        className="flex flex-col items-center gap-3 py-8 text-center"
+                      <motion.div
+                        whileHover={{ rotate: 360, scale: 1.2 }}
+                        transition={{ duration: 0.6 }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: `${color}15`,
+                          boxShadow: `0 0 20px ${color}30`,
+                        }}
                       >
-                        <motion.div
-                          whileHover={{ rotate: 360, scale: 1.2 }}
-                          transition={{ duration: 0.6 }}
-                          className="w-12 h-12 rounded-xl flex items-center justify-center"
-                          style={{
-                            background: `${color}15`,
-                            boxShadow: `0 0 20px ${color}30`,
-                          }}
-                        >
-                          <Icon className="w-6 h-6" style={{ color }} />
-                        </motion.div>
-                        <span className="text-sm font-medium text-foreground">{ROLE_LABELS[role]}</span>
-                      </GlassCard>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              {!user && (
-                <button
-                  onClick={() => setStep("auth")}
-                  className="mt-6 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  ← Back to login
-                </button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                        <Icon className="w-5 h-5" style={{ color }} />
+                      </motion.div>
+                      <span className="text-sm font-medium text-foreground">
+                        {user.name}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {ROLE_LABELS[user.role]}
+                      </span>
+                    </GlassCard>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
