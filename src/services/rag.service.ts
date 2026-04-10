@@ -1,7 +1,7 @@
 /**
  * RAG Service — Communicates with the Python FastAPI RAG backend
  *
- * This service provides the bridge between the DeviQ React frontend
+ * This service provides the bridge between the AASDAW React frontend
  * and the FAISS-powered policy document search system.
  *
  * The RAG backend runs separately (see RAG/start_rag.bat).

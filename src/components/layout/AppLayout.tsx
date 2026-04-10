@@ -72,7 +72,7 @@ export function AppLayout() {
               <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
                 <span className="text-xs font-bold text-primary-foreground">DQ</span>
               </div>
-              <span className="text-sm font-semibold text-foreground">DeviQ</span>
+              <span className="text-sm font-semibold text-foreground">AASDAW</span>
             </motion.div>
           )}
           <Button

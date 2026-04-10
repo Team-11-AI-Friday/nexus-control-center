@@ -53,7 +53,7 @@ export default function LoginPage() {
     try {
       const result = signIn(email, password);
       if (result.success) {
-        toast.success("Welcome to DeviQ!", {
+        toast.success("Welcome to AASDAW!", {
           description: `Signed in successfully.`,
         });
         navigate(result.redirectPath || "/dashboard");
@@ -73,7 +73,7 @@ export default function LoginPage() {
     // Auto-submit
     const result = signIn(userEmail, "DevIQ@2025");
     if (result.success) {
-      toast.success("Welcome to DeviQ!", {
+      toast.success("Welcome to AASDAW!", {
         description: `Quick login successful.`,
       });
       navigate(result.redirectPath || "/dashboard");
@@ -116,7 +116,7 @@ export default function LoginPage() {
             initial={{ y: -20 }}
             animate={{ y: 0 }}
           >
-            DeviQ
+            AASDAW
           </motion.h1>
           <p className="text-muted-foreground mb-8 text-sm">
             AI-Assisted Service Deviation & Approval Workflow

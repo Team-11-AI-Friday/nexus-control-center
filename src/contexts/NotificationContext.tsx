@@ -58,7 +58,7 @@ const initialNotifications: Notification[] = [
     id: "notif-005",
     type: "info",
     title: "AI Risk Assessment Complete",
-    message: "DeviQ AI has completed risk assessment for DEV-2026-002 (KYC Deferral). Score: 71 (HIGH).",
+    message: "AASDAW AI has completed risk assessment for DEV-2026-002 (KYC Deferral). Score: 71 (HIGH).",
     timestamp: new Date(Date.now() - 18000000).toISOString(),
     read: true,
     requestId: "DEV-2026-002",

@@ -110,7 +110,7 @@ export const seedDeviations: DeviationRequest[] = [
     slaDeadline: hoursFromNow(46),
     approvalChain: [
       { stage: "initiated", approverName: "Vishal", approverRole: "account_manager", status: "approved", timestamp: hoursAgo(2) },
-      { stage: "ai_review", approverName: "DeviQ AI", approverRole: "system_admin", status: "pending" },
+      { stage: "ai_review", approverName: "AASDAW AI", approverRole: "system_admin", status: "pending" },
       { stage: "l1_approval", approverName: "Thivagaran", approverRole: "operations_manager", status: "pending" },
       { stage: "l2_approval", approverName: "Arun", approverRole: "finance_approver", status: "pending" },
       { stage: "compliance", approverName: "Vasanth", approverRole: "compliance_officer", status: "pending" },
@@ -158,7 +158,7 @@ export const seedDeviations: DeviationRequest[] = [
     slaDeadline: hoursFromNow(42),
     approvalChain: [
       { stage: "initiated", approverName: "Vishal", approverRole: "account_manager", status: "approved", timestamp: hoursAgo(6) },
-      { stage: "ai_review", approverName: "DeviQ AI", approverRole: "system_admin", status: "pending", aiRecommendation: "Conditional approval — High risk, requires compliance oversight" },
+      { stage: "ai_review", approverName: "AASDAW AI", approverRole: "system_admin", status: "pending", aiRecommendation: "Conditional approval — High risk, requires compliance oversight" },
       { stage: "l1_approval", approverName: "Thivagaran", approverRole: "operations_manager", status: "pending" },
       { stage: "l2_approval", approverName: "Arun", approverRole: "finance_approver", status: "pending" },
       { stage: "compliance", approverName: "Vasanth", approverRole: "compliance_officer", status: "pending" },
@@ -206,7 +206,7 @@ export const seedDeviations: DeviationRequest[] = [
     slaDeadline: hoursFromNow(30),
     approvalChain: [
       { stage: "initiated", approverName: "Muthu Pandi", approverRole: "network_manager", status: "approved", timestamp: hoursAgo(18) },
-      { stage: "ai_review", approverName: "DeviQ AI", approverRole: "system_admin", status: "approved", timestamp: hoursAgo(17), aiRecommendation: "Approve — Low risk, within policy" },
+      { stage: "ai_review", approverName: "AASDAW AI", approverRole: "system_admin", status: "approved", timestamp: hoursAgo(17), aiRecommendation: "Approve — Low risk, within policy" },
       { stage: "l1_approval", approverName: "Thivagaran", approverRole: "operations_manager", status: "pending", aiRecommendation: "Recommend approval — strategic government account" },
       { stage: "l2_approval", approverName: "Muthu Pandi", approverRole: "network_manager", status: "pending" },
       { stage: "compliance", approverName: "Vasanth", approverRole: "compliance_officer", status: "pending" },
@@ -254,7 +254,7 @@ export const seedDeviations: DeviationRequest[] = [
     slaDeadline: hoursFromNow(1.5), // < 2 hours — triggers escalation
     approvalChain: [
       { stage: "initiated", approverName: "Vishal", approverRole: "account_manager", status: "approved", timestamp: daysAgo(3) },
-      { stage: "ai_review", approverName: "DeviQ AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(3), aiRecommendation: "Conditional approval — Medium risk due to precedent" },
+      { stage: "ai_review", approverName: "AASDAW AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(3), aiRecommendation: "Conditional approval — Medium risk due to precedent" },
       { stage: "l1_approval", approverName: "Thivagaran", approverRole: "operations_manager", status: "approved", timestamp: daysAgo(2), comment: "Approved with condition: customer must provide migration completion timeline." },
       { stage: "l2_approval", approverName: "Arun", approverRole: "finance_approver", status: "pending", aiRecommendation: "Review financial impact — ₹8.2L approaches quarterly max" },
       { stage: "compliance", approverName: "Vasanth", approverRole: "compliance_officer", status: "pending" },
@@ -302,7 +302,7 @@ export const seedDeviations: DeviationRequest[] = [
     slaDeadline: hoursFromNow(20),
     approvalChain: [
       { stage: "initiated", approverName: "Vishal", approverRole: "account_manager", status: "approved", timestamp: daysAgo(4) },
-      { stage: "ai_review", approverName: "DeviQ AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(4), aiRecommendation: "Approve — Very low risk" },
+      { stage: "ai_review", approverName: "AASDAW AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(4), aiRecommendation: "Approve — Very low risk" },
       { stage: "l1_approval", approverName: "Thivagaran", approverRole: "operations_manager", status: "approved", timestamp: daysAgo(3), comment: "Good retention strategy for IPL season." },
       { stage: "l2_approval", approverName: "Arun", approverRole: "finance_approver", status: "approved", timestamp: daysAgo(2), comment: "No additional cost implications — content license is bundled." },
       { stage: "compliance", approverName: "Vasanth", approverRole: "compliance_officer", status: "pending", aiRecommendation: "No compliance concerns — within MIB guidelines" },
@@ -351,7 +351,7 @@ export const seedDeviations: DeviationRequest[] = [
     slaDeadline: hoursFromNow(4),
     approvalChain: [
       { stage: "initiated", approverName: "Thivagaran", approverRole: "operations_manager", status: "approved", timestamp: daysAgo(5) },
-      { stage: "ai_review", approverName: "DeviQ AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(5), aiRecommendation: "Critical risk — recommend immediate escalation to executive approval" },
+      { stage: "ai_review", approverName: "AASDAW AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(5), aiRecommendation: "Critical risk — recommend immediate escalation to executive approval" },
       { stage: "l1_approval", approverName: "Thivagaran", approverRole: "operations_manager", status: "approved", timestamp: daysAgo(4), comment: "Emergency approval — CDN failure confirmed by NOC team." },
       { stage: "l2_approval", approverName: "Arun", approverRole: "finance_approver", status: "approved", timestamp: daysAgo(3), comment: "Financial impact accepted. Revenue protection overrides credit cost." },
       { stage: "compliance", approverName: "Vasanth", approverRole: "compliance_officer", status: "approved", timestamp: daysAgo(2), comment: "TRAI compliance confirmed. Credit is within regulatory penalty framework." },
@@ -399,7 +399,7 @@ export const seedDeviations: DeviationRequest[] = [
     slaDeadline: daysAgo(5),
     approvalChain: [
       { stage: "initiated", approverName: "Muthu Pandi", approverRole: "network_manager", status: "approved", timestamp: daysAgo(15) },
-      { stage: "ai_review", approverName: "DeviQ AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(15), aiRecommendation: "Approve — Low risk" },
+      { stage: "ai_review", approverName: "AASDAW AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(15), aiRecommendation: "Approve — Low risk" },
       { stage: "l1_approval", approverName: "Thivagaran", approverRole: "operations_manager", status: "approved", timestamp: daysAgo(14), comment: "Standard migration support." },
       { stage: "l2_approval", approverName: "Muthu Pandi", approverRole: "network_manager", status: "approved", timestamp: daysAgo(13), comment: "Network capacity confirmed for both POPs." },
       { stage: "compliance", approverName: "Vasanth", approverRole: "compliance_officer", status: "approved", timestamp: daysAgo(12) },
@@ -447,7 +447,7 @@ export const seedDeviations: DeviationRequest[] = [
     slaDeadline: daysAgo(25),
     approvalChain: [
       { stage: "initiated", approverName: "Thivagaran", approverRole: "operations_manager", status: "approved", timestamp: daysAgo(35) },
-      { stage: "ai_review", approverName: "DeviQ AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(35), aiRecommendation: "Approve — Force majeure, no risk" },
+      { stage: "ai_review", approverName: "AASDAW AI", approverRole: "system_admin", status: "approved", timestamp: daysAgo(35), aiRecommendation: "Approve — Force majeure, no risk" },
       { stage: "l1_approval", approverName: "Thivagaran", approverRole: "operations_manager", status: "approved", timestamp: daysAgo(34), comment: "Force majeure confirmed by NDMA." },
       { stage: "l2_approval", approverName: "Arun", approverRole: "finance_approver", status: "approved", timestamp: daysAgo(33), comment: "Insurance claim filed for Cyclone Michaung losses." },
       { stage: "compliance", approverName: "Vasanth", approverRole: "compliance_officer", status: "approved", timestamp: daysAgo(32), comment: "TRAI force majeure provisions apply. No regulatory concern." },
@@ -463,7 +463,7 @@ export const seedDeviations: DeviationRequest[] = [
 export const seedActivityLog: ActivityLogEntry[] = [
   { id: "LOG-001", requestId: "DEV-2026-001", action: "Request Submitted", actorName: "Vishal", actorRole: "account_manager", timestamp: hoursAgo(2), details: "New billing credit deviation request created for Airtel Enterprise", immutable: true },
   { id: "LOG-002", requestId: "DEV-2026-002", action: "Request Submitted", actorName: "Vishal", actorRole: "account_manager", timestamp: hoursAgo(6), details: "KYC deferral request created for Jio Business", immutable: true },
-  { id: "LOG-003", requestId: "DEV-2026-003", action: "AI Review Complete", actorName: "DeviQ AI", actorRole: "system_admin", timestamp: hoursAgo(17), details: "Risk score: 15 — Recommended for approval (Gemini Flash)", immutable: true },
+  { id: "LOG-003", requestId: "DEV-2026-003", action: "AI Review Complete", actorName: "AASDAW AI", actorRole: "system_admin", timestamp: hoursAgo(17), details: "Risk score: 15 — Recommended for approval (Gemini Flash)", immutable: true },
   { id: "LOG-004", requestId: "DEV-2026-004", action: "L1 Approved (Conditional)", actorName: "Thivagaran", actorRole: "operations_manager", timestamp: daysAgo(2), details: "SLA waiver L1 approved — condition: customer must provide migration timeline", immutable: true },
   { id: "LOG-005", requestId: "DEV-2026-004", action: "SLA Escalation Warning", actorName: "System", actorRole: "system_admin", timestamp: hoursAgo(1), details: "SLA deadline approaching — less than 2 hours remaining for DEV-2026-004", immutable: true },
   { id: "LOG-006", requestId: "DEV-2026-005", action: "L2 Approved", actorName: "Arun", actorRole: "finance_approver", timestamp: daysAgo(2), details: "Content access exception — no cost implications confirmed", immutable: true },

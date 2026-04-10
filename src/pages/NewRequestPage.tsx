@@ -138,7 +138,7 @@ export default function NewRequestPage() {
       slaDeadline: new Date(Date.now() + 48 * 3600000).toISOString(),
       approvalChain: [
         { stage: "initiated" as const, approverName: currentUser.name, approverRole: currentUser.role, status: "approved" as const, timestamp: new Date().toISOString() },
-        { stage: "ai_review" as const, approverName: "DeviQ AI", approverRole: "system_admin" as const, status: "pending" as const },
+        { stage: "ai_review" as const, approverName: "AASDAW AI", approverRole: "system_admin" as const, status: "pending" as const },
         { stage: "l1_approval" as const, approverName: "Pending", approverRole: "operations_manager" as const, status: "pending" as const },
         { stage: "l2_approval" as const, approverName: "Pending", approverRole: "finance_approver" as const, status: "pending" as const },
         { stage: "compliance" as const, approverName: "Pending", approverRole: "compliance_officer" as const, status: "pending" as const },
