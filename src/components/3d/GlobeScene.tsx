@@ -1,35 +1,44 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Sphere } from "@react-three/drei";
 import * as THREE from "three";
 
 function Globe() {
   const globeRef = useRef<THREE.Mesh>(null);
-  const arcsRef = useRef<THREE.Group>(null);
+  const arcsGroupRef = useRef<THREE.Group>(null);
 
   useFrame(({ clock }) => {
     if (globeRef.current) {
       globeRef.current.rotation.y = clock.getElapsedTime() * 0.15;
     }
-    if (arcsRef.current) {
-      arcsRef.current.rotation.y = clock.getElapsedTime() * 0.1;
+    if (arcsGroupRef.current) {
+      arcsGroupRef.current.rotation.y = clock.getElapsedTime() * 0.1;
     }
   });
 
-  const arcs = Array.from({ length: 8 }, (_, i) => {
-    const curve = new THREE.EllipseCurve(
-      0, 0,
-      2.2 + Math.random() * 0.3,
-      2.2 + Math.random() * 0.3,
-      0, Math.PI * (0.3 + Math.random() * 0.7),
-      false, Math.random() * Math.PI * 2
-    );
-    const points = curve.getPoints(50);
-    const geometry = new THREE.BufferGeometry().setFromPoints(
-      points.map(p => new THREE.Vector3(p.x, p.y, 0))
-    );
-    return { geometry, rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI] as [number, number, number], key: i };
-  });
+  const arcs = useMemo(() => {
+    return Array.from({ length: 8 }, (_, i) => {
+      const curve = new THREE.EllipseCurve(
+        0, 0,
+        2.2 + Math.random() * 0.3,
+        2.2 + Math.random() * 0.3,
+        0, Math.PI * (0.3 + Math.random() * 0.7),
+        false, Math.random() * Math.PI * 2
+      );
+      const pts = curve.getPoints(50);
+      const positions = new Float32Array(pts.length * 3);
+      pts.forEach((p, idx) => {
+        positions[idx * 3] = p.x;
+        positions[idx * 3 + 1] = p.y;
+        positions[idx * 3 + 2] = 0;
+      });
+      return {
+        positions,
+        rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI] as [number, number, number],
+        key: i,
+      };
+    });
+  }, []);
 
   return (
     <>
@@ -44,18 +53,22 @@ function Globe() {
         />
       </Sphere>
       <Sphere args={[1.98, 32, 32]}>
-        <meshPhongMaterial
-          color="#0a0a1a"
-          transparent
-          opacity={0.8}
-        />
+        <meshPhongMaterial color="#0a0a1a" transparent opacity={0.8} />
       </Sphere>
-      <group ref={arcsRef}>
-        {arcs.map(({ geometry, rotation, key }) => (
-          <line key={key} rotation={rotation}>
-            <primitive object={geometry} attach="geometry" />
-            <lineBasicMaterial color="#00d4ff" transparent opacity={0.4} />
-          </line>
+      <group ref={arcsGroupRef}>
+        {arcs.map(({ positions, rotation, key }) => (
+          <group key={key} rotation={rotation}>
+            <line>
+              <bufferGeometry>
+                <bufferAttribute
+                  attach="attributes-position"
+                  args={[positions, 3]}
+                  count={positions.length / 3}
+                />
+              </bufferGeometry>
+              <lineBasicMaterial color="#00d4ff" transparent opacity={0.4} />
+            </line>
+          </group>
         ))}
       </group>
     </>

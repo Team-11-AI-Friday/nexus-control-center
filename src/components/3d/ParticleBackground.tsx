@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 function Particles() {
   const count = 200;
-  const meshRef = useRef<THREE.Points>(null);
+  const groupRef = useRef<THREE.Group>(null);
 
   const [positions, connections] = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -29,14 +29,14 @@ function Particles() {
   }, []);
 
   useFrame(({ clock }) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y = clock.getElapsedTime() * 0.02;
-      meshRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.01) * 0.1;
+    if (groupRef.current) {
+      groupRef.current.rotation.y = clock.getElapsedTime() * 0.02;
+      groupRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.01) * 0.1;
     }
   });
 
   return (
-    <group ref={meshRef}>
+    <group ref={groupRef}>
       <points>
         <bufferGeometry>
           <bufferAttribute
