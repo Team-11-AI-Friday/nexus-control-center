@@ -1,6 +1,6 @@
-# Nexus Control Center (DeviQ)
+# Nexus Control Center (AASDAW)
 
-Nexus Control Center (DeviQ) is a comprehensive, AI-assisted platform designed for telecom operators to manage, track, and analyze service deviation requests. The system employs intelligent Risk Analysis, automatic prompt justification based on company policies, and an insightful dashboard overlay to simplify regulatory compliance (like TRAI, MIB, PMLA) and streamline manager approvals.
+Nexus Control Center (AASDAW) is a comprehensive, AI-assisted platform designed for telecom operators to manage, track, and analyze service deviation requests. The system employs intelligent Risk Analysis, automatic prompt justification based on company policies, and an insightful dashboard overlay to simplify regulatory compliance (like TRAI, MIB, PMLA) and streamline manager approvals.
 
 ## 📸 UI Previews
 
